@@ -73,16 +73,16 @@ def send_mail(message, Subject, sender_show, recipient_show, to_addrs, filename,
     :param cc_show: str 抄送人显示，不起实际作用，多个抄送人用','隔开如："xxx,xxxx"
     '''
     # 填写真实的发邮件服务器用户名、密码
-    user = 'root'
-    password = '123456'
+    user = 'hexs@microparity.com'
+    password = 'p@ssw0rd_xiong'
     # 邮件内容
     msg = MIMEMultipart()
-    msg.attach(MIMEText(message, 'html', _charset="utf-8"))
+    msg.attach(MIMEText(message, 'plain', _charset="utf-8"))
     # 构造附件1，传送当前目录下的 test.txt 文件
     att = MIMEText(open(filename, 'rb').read(), 'base64', 'utf-8')
     att["Content-Type"] = 'application/octet-stream'
     # 附件名称为中文时的写法
-    att.add_header("Content-Disposition", "attachment", filename=("gbk", "", filename))
+    att.add_header("Content-Disposition", "attachment", filename=("gbk", "", filename.split('/')[-1]))
     # 附件名称非中文时的写法,这里的filename可以任意写，写什么名字，邮件中显示什么名字
     # att["Content-Disposition"] = 'attachment; filename="{}"'.format(filename)
     msg.attach(att)
@@ -94,7 +94,7 @@ def send_mail(message, Subject, sender_show, recipient_show, to_addrs, filename,
     msg["to"] = recipient_show
     # 抄送人显示，不起实际作用
     msg["Cc"] = cc_show
-    with SMTP_SSL(host="smtp.exmail.qq.com",port=465) as smtp:
+    with SMTP_SSL(host="smtp.mxhichina.com",port=465) as smtp:
         # 登录发送邮件服务器
         smtp.login(user = user, password = password)
         # 实际发送、接收邮件配置
@@ -102,18 +102,22 @@ def send_mail(message, Subject, sender_show, recipient_show, to_addrs, filename,
 
 
 if __name__ == '__main__':
-    data_path = "email.xlsx"
-    sheetname = "Sheet1"
+    data_path = "email.xls"
+    sheetname = "邮箱"
     get_data = ExcelData(data_path, sheetname)
-    datas = get_data.read_excel()
-    print(datas)
-    filename = ''
-    message = 'Python 测试邮件...'
-    Subject = '主题测试'
-    # 显示发送人
-    sender_show = 'xxx'
-    # 显示收件人
-    recipient_show = 'xxx'
-    # 实际发给的收件人
-    to_addrs = 'xxx@company.com'
-    send_mail(message, Subject, sender_show, recipient_show, filename, to_addrs)
+    email_datas = get_data.read_excel()
+    sheetname = "正文"
+    get_data = ExcelData(data_path, sheetname)
+    msg = get_data.read_excel()
+    for e_msg in email_datas:
+        print(e_msg['name'])
+        filename = './file/' + e_msg['name'] + '.pdf'
+        message = e_msg['name']  + ":\n" + msg[0]['正文']
+        Subject = ''
+        # 显示发送人
+        sender_show = '何雄森'
+        # 显示收件人
+        recipient_show = e_msg['name']
+        # 实际发给的收件人
+        to_addrs = e_msg['address']
+        send_mail(message, Subject, sender_show, recipient_show, to_addrs, filename)
